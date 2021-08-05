@@ -16,6 +16,10 @@ int generateRandomNumbers(int ant)
     return rand() % 100 + ant;
 }
 
+void socketConection()
+{
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -23,8 +27,8 @@ int main(int argc, char **argv)
         cout << "Insira a quantidade de números a ser gerado" << endl;
         return 0;
     }
-    int cont = 0, limite = stoi(argv[1]), numero = 0;
-    if (limite <= 0)
+    int cont = 0, limit = stoi(argv[1]), randomNumber = 0;
+    if (limit <= 0)
     {
         cout << "Insira um limite positivo e não nulo.";
     }
@@ -71,23 +75,24 @@ int main(int argc, char **argv)
 
     do
     {
-        numero = generateRandomNumbers(numero);
+        randomNumber = generateRandomNumbers(randomNumber);
         cont++;
-        const char *msg = (to_string(numero)).c_str();
+        const char *msg = (to_string(randomNumber)).c_str();
         // envia pro cliente.
         send(new_socket, msg, strlen(msg), 0);
         valread = read(new_socket, buffer, 1024);
-        int resposta = atoi(buffer);
-        if (resposta == 1)
+        int answer = atoi(buffer);
+        if (answer == 1)
         {
-            cout << "Enviei: " << numero << " e recebi que ele É primo" << endl;
+            cout << "Enviei o: " << randomNumber << " e recebi que ele é primo" << endl;
         }
         else
         {
-            cout << "Enviei: " << numero << " e recebi que ele NÃO é primo" << endl;
+            cout << "Enviei o: " << randomNumber << " e recebi que ele não é primo" << endl;
         }
-    } while (cont < limite);
-    cout << "Encerrei! Enviando zero para o consumidor." << endl;
+    } while (cont < limit);
+
+    cout << "Enviando zero para o consumidor. Encerrando!" << endl;
     send(new_socket, "0", strlen("0"), 0);
     return 0;
 }

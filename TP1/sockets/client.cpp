@@ -32,6 +32,7 @@ int main(int argc, char **argv)
     struct sockaddr_in serv_addr;
     char *hello = "Hello from client";
     char buffer[1024] = {0};
+
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         cout << "\n Socket creation error \n";
