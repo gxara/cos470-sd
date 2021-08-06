@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
     } while (numbersGenerated < desiredNumbers);
 
     send(sock, "0", strlen("0"), 0);
-    cout << "Encerrando execução ... " << endl;
+    cout << "Done ... " << endl;
 
     return 0;
 }
