@@ -85,8 +85,9 @@ int main(int argc, char *argv[])
     chrono::duration<double> elapsed = end - start;
 
     cout << "\n************ RESULT ************" << endl;
-    cout << "Cumulative Sum: " << cumulativeSum << endl;
-    cout << "Threads Quantity: " << numberOfThreads << endl;
+    cout << "Number of elements: " << NUM_ELEMENTS << endl;
+    cout << "Cumulative sum: " << cumulativeSum << endl;
+    cout << "Threads quantity: " << numberOfThreads << endl;
     cout << "Execution time: " << elapsed.count() << endl;
     cout << "********************************\n"
          << endl;
