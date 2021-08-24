@@ -7,7 +7,7 @@
 #include "../../helpers/splitVector.h"
 using namespace std;
 
-#define NUM_ELEMENTS 10000000
+#define NUM_ELEMENTS 1000000000
 
 atomic_flag lock_stream = ATOMIC_FLAG_INIT;
 
@@ -26,10 +26,8 @@ void release(atomic_flag *lock)
 
 void acumulate(vector<int> chunk, int threadNum)
 {
-    acquire(&lock_stream);
-    cout << "[THREAD " << threadNum << "] Will sum data inside chunk " << threadNum << endl;
     int chunkSum = accumulate(chunk.begin(), chunk.end(), 0);
-    cout << "[THREAD " << threadNum << "] Chunk sum = " << chunkSum << endl;
+    acquire(&lock_stream);
     cumulativeSum += chunkSum;
     release(&lock_stream);
 }
