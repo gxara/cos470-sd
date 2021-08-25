@@ -54,11 +54,11 @@ int main(int argc, char *argv[])
     int numberOfExecutions = 10;
     double totalTime = 0;
     int numberOfThreads = atoi(argv[1]);
+    vector<int> numbers = populate(NUM_ELEMENTS);
 
     for (int iteration = 1; iteration <= numberOfExecutions; iteration++)
     {
 
-        vector<int> numbers = populate(NUM_ELEMENTS);
         int chunkSize = NUM_ELEMENTS / numberOfThreads;
 
         vector<vector<int>> vectorOfChunks = splitVectorIntoChunks(numbers, chunkSize);
