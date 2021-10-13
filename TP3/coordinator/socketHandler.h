@@ -2,10 +2,11 @@
 #include <mutex>
 
 using namespace std;
-int SOCKET_PORT = 5000;
-int MAX_QUEUED_CONNECTIONS = 10;
-struct sockaddr_in address;
-int addressSize = sizeof(sockaddr);
+extern int SOCKET_PORT;
+extern int MAX_QUEUED_CONNECTIONS;
+extern int MAX_CLIENTS;
+extern struct sockaddr_in address;
+extern int addressSize; // = sizeof(sockaddr);
 
 struct socketsHandler
 {
@@ -15,13 +16,13 @@ struct socketsHandler
     int *clients;
 };
 
-int readClientMessage(deque<message> messageQueue, mutex messageQueueMutex, char *buffer, int clientFd);
+void readClientMessage(deque<message> messageQueue, mutex messageQueueMutex, char *buffer, int clientFd);
 
 int createSocket();
 
 void configureSocketToHandleMultipleConnections(int socketFd);
 
-int bindAddressToSocketFd(int socketFd);
+void bindAddressToSocketFd(int socketFd);
 
 void configureSocketIncomingConnections(int socketFd, int maxQueuedConnections);
 

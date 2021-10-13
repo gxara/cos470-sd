@@ -8,32 +8,16 @@
 #include <mutex>
 #include <map>
 
-#include "../helpers/parser.h"
+#include "parser.h"
+#include "socketHandler.h"
 
 using namespace std;
+
 int SOCKET_PORT = 5000;
+int MAX_CLIENTS = 150;
 int MAX_QUEUED_CONNECTIONS = 10;
 struct sockaddr_in address;
 int addressSize = sizeof(sockaddr);
-
-struct socketsHandler
-{
-    int masterSocketFd;
-    char *buffer;
-    timeval timeout;
-    int *clients;
-};
-
-int readClientMessage(deque<message> messageQueue, mutex messageQueueMutex, char *buffer, int clientFd)
-{
-    message tmp = parseMessage(buffer, clientFd);
-    if (tmp.type != -35)
-    {
-        messageQueueMutex.lock();
-        messageQueue.push_back(tmp);
-        messageQueueMutex.unlock();
-    }
-}
 
 int createSocket()
 {
@@ -55,7 +39,7 @@ void configureSocketToHandleMultipleConnections(int socketFd)
     }
 }
 
-int bindAddressToSocketFd(int socketFd)
+void bindAddressToSocketFd(int socketFd)
 {
     // Abrindo porta para conexões
     address.sin_family = AF_INET;          // IPv4
@@ -83,6 +67,8 @@ socketsHandler prepareSocketsHandler()
 {
 
     char buffer[MESSAGE_MAX_SIZE + 1];
+    for (int j = 0; j < MESSAGE_MAX_SIZE; j++)
+        buffer[j] = '0';
 
     int masterSocketFd = createSocket();
 
@@ -90,91 +76,14 @@ socketsHandler prepareSocketsHandler()
     bindAddressToSocketFd(masterSocketFd);
     configureSocketIncomingConnections(masterSocketFd, MAX_QUEUED_CONNECTIONS);
 
-    // Configurando timeout do select
     struct timeval timeout;
-    timeout.tv_sec = 1;
+    timeout.tv_sec = 10;
 
     socketsHandler x;
     x.masterSocketFd = masterSocketFd;
     x.buffer = buffer;
     x.timeout = timeout;
-    x.clients = {0}; // All positions initialized as zero
+    x.clients = new int[MAX_CLIENTS]();
 
     return x;
 }
-
-// Thread to handle new socket connections
-void socketConnetionsHandlerFactory(bool &running,
-                                    deque<message> &messageQueue,
-                                    mutex &messageQueueMutex)
-{
-    socketsHandler socketsHandler = prepareSocketsHandler();
-    fd_set readfds;
-
-    while (running)
-    {
-        FD_ZERO(&readfds);                               // Clear the sockets list
-        FD_SET(socketsHandler.masterSocketFd, &readfds); // Add the master process at the sockets list
-
-        int maxFd = socketsHandler.masterSocketFd;
-
-        // Creating sockets to handle clients connections
-        for (int i = 0; i < sizeof(socketsHandler.clients); i++)
-        {
-            int clientFd = socketsHandler.clients[i];
-            if (clientFd > 0)
-                FD_SET(clientFd, &readfds);
-            if (clientFd > maxFd)
-                maxFd = clientFd;
-        }
-
-        int activity = select(maxFd + 1, &readfds, NULL, NULL, &socketsHandler.timeout); // Aguarda por atividade em algum socket
-
-        if ((activity < 0) && (errno != EINTR))
-            cout << "Erro no comando select" << endl;
-
-        // If the master socket has recorded activity it must be a new client connection request
-        if (FD_ISSET(socketsHandler.masterSocketFd, &readfds))
-        {
-            int newConnectionFd = accept(socketsHandler.masterSocketFd, (struct sockaddr *)&address, (socklen_t *)&addressSize);
-            if (newConnectionFd < 0)
-            {
-                throw "Erro ao aceitar nova conexão";
-            }
-            for (int i = 0; i < sizeof(socketsHandler.clients); i++)
-            {
-                if (socketsHandler.clients[i] == 0)
-                {
-                    socketsHandler.clients[i] = newConnectionFd;
-                    break;
-                }
-            }
-        }
-
-        // Iterate over clients sockets
-        for (int i = 0; i < sizeof(socketsHandler.clients); i++)
-        {
-            int clientFd = socketsHandler.clients[i];
-
-            // Received I/O at one of the sockets
-            if (FD_ISSET(clientFd, &readfds))
-            {
-                int valread = read(clientFd, socketsHandler.buffer, MESSAGE_MAX_SIZE + 1);
-                if (valread == -1)
-                {
-                    cerr << "Erro na leitura do socket" << endl;
-                }
-                if (valread == 0)
-                {
-                    // Received EOF -> Close connection
-                    close(clientFd);
-                    clientFd = 0;
-                }
-                else
-                {
-                    readClientMessage(messageQueue, messageQueueMutex, socketsHandler.buffer, clientFd);
-                }
-            }
-        }
-    }
-};

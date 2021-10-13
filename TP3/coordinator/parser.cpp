@@ -1,19 +1,7 @@
 #include <iostream>
+#include "parser.h"
 
-#define MESSAGE_MAX_SIZE 10
-#define MESSAGE_REQUEST 1
-#define MESSAGE_GRANT 2
-#define MESSAGE_RELEASE 3
-#define SEPARATOR '.'
-
-struct message
-{
-    int id;
-    int fd;
-    int type;
-};
-
-message parseMessage(char buffer[MESSAGE_MAX_SIZE + 1], int fd)
+message parseMessage(char *buffer, int fd)
 {
     message ret;
     int messageType, i = 2;
@@ -25,6 +13,7 @@ message parseMessage(char buffer[MESSAGE_MAX_SIZE + 1], int fd)
         i++;
     }
     tmp[i - 2] = '\0';
+    std::cout << "-- Message received from PID " << tmp << " with type " << messageType << std::endl;
     ret.fd = fd;
     ret.type = messageType;
     ret.id = atoi(tmp);
